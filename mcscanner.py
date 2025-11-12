@@ -61,12 +61,14 @@ port_map = {
         25565: "Minecraft Server",
 }
 # Creates a TCP socket with IPV4 addressing
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
 while True:
     target = (input("Enter target IP address or domain: "))
-    ports = input("Enter port(s) to scan (separate with spaces) or press Enter to scan default ports: ").split()
-    
+    ports_raw = input("Enter port(s) to scan (separate with spaces) or press Enter to scan default ports: ").split()
+    ports_mapped = map(int , ports_raw)
+    ports = list(ports_mapped)
+
     if ports == []:
         ports = [20, 21, 22, 23 ,25, 53, 80, 110, 143, 443, 3389]
     
@@ -78,6 +80,7 @@ while True:
         print(f"Scanning port {port} ({name}) on {target}...")
             
         try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((target, port))
             print(f"Port {port} ({name}) is open on {target}")
         except ConnectionRefusedError:
