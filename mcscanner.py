@@ -60,63 +60,56 @@ port_map = {
         27017: "MongoDB",
         25565: "Minecraft Server",
 }
+socket.setdefaulttimeout(5)
+
+def parse_the_ports(ports_string):
+    if '-' in ports_string:
+        ports_range = ports_string.split('-')
+        ports_mapped = map(int , ports_range)
+        ports_Min_Max = list(ports_mapped)
+        return list(range(ports_Min_Max[0], ports_Min_Max[1]+1))
+    elif ports_string != '':
+        ports_mapped = map(int , ports_string.split())
+        return list(ports_mapped)
+    else:
+        return [20, 21, 22, 23 ,25, 53, 80, 110, 143, 443, 3389]
+
+def scan_em(ports, target):
+    for port in ports:
+        name = port_map.get(int(port))
+        if name == None:
+            name = 'PORT NAME UNKNOWN' 
+        print(f"Scanning port {port} ({name}) on {target}...")
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((target, port))
+            print(f"Port {port} ({name}) is open on {target}")
+            s.close()
+        except ConnectionRefusedError:
+                print(f"Port {port} ({name}) is closed on {target}")
+                s.close()
+        except socket.timeout:
+                print(f"Port {port} ({name}) couldn't be reached on {target}")
+                s.close()
+        except Exception as e:
+                print(e)
+                s.close()
+
+#Start Loop
 
 print("Welcome to McScanner - The Peoples's Port Scanner")
-
 while True:
     
     target = (input("Enter target IP address or domain: "))
     ports_string = input("Enter list of port(s) (space separated) to scan, a range ex: 2-999, or press Enter to scan default ports: ")
 
     #Port parsing
-    if '-' in ports_string:
-        ports_range = ports_string.split('-')
-        ports_mapped = map(int , ports_range)
-        ports_Min_Max = list(ports_mapped)
-    elif ports_string != '':
-        ports_mapped = map(int , ports_string.split())
-        ports = list(ports_mapped)
-    else:
-        ports = [20, 21, 22, 23 ,25, 53, 80, 110, 143, 443, 3389]
+    ports = parse_the_ports(ports_string)
     
     #Scan the ports
-    if '-' in ports_string:
-       for port in range(ports_Min_Max[0], ports_Min_Max[1]+1):
-            name = port_map.get(int(port))
-            if name == None:
-                name = 'PORT NAME UNKNOWN'
-            print(f"Scanning port {port} ({name}) on {target}...")
-                
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((target, port))
-                print(f"Port {port} ({name}) is open on {target}")
-            except ConnectionRefusedError:
-                print(f"Port {port} ({name}) is closed on {target}")
-            except TimeoutError:
-                print("Connection timed out, check if this host is reachable.")
-            except Exception as e:
-                print(e)
-    else:
-        for port in ports:
-            name = port_map.get(int(port))
-
-            if name == None:
-                name = 'PORT NAME UNKNOWN'
-            print(f"Scanning port {port} ({name}) on {target}...")
-                
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((target, port))
-                print(f"Port {port} ({name}) is open on {target}")
-            
-            except ConnectionRefusedError:
-                print(f"Port {port} ({name}) is closed on {target}")
-            except TimeoutError:
-                print("Connection timed out, check if this host is reachable.")
-            except Exception as e:
-                print(e)
+    scan_em(ports, target)
     
     loopCheck = input("Do you want to scan another target? (y/n): ")
     if loopCheck.lower() != 'y':
         break
+
